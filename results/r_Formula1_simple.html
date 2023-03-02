@@ -1,0 +1,452 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script>function neighbourhoodHighlight(params) {
+  // console.log("in nieghbourhoodhighlight");
+  allNodes = nodes.get({ returnType: "Object" });
+  // originalNodes = JSON.parse(JSON.stringify(allNodes));
+  // if something is selected:
+  if (params.nodes.length > 0) {
+    highlightActive = true;
+    var i, j;
+    var selectedNode = params.nodes[0];
+    var degrees = 2;
+
+    // mark all nodes as hard to read.
+    for (let nodeId in allNodes) {
+      // nodeColors[nodeId] = allNodes[nodeId].color;
+      allNodes[nodeId].color = "rgba(200,200,200,0.5)";
+      if (allNodes[nodeId].hiddenLabel === undefined) {
+        allNodes[nodeId].hiddenLabel = allNodes[nodeId].label;
+        allNodes[nodeId].label = undefined;
+      }
+    }
+    var connectedNodes = network.getConnectedNodes(selectedNode);
+    var allConnectedNodes = [];
+
+    // get the second degree nodes
+    for (i = 1; i < degrees; i++) {
+      for (j = 0; j < connectedNodes.length; j++) {
+        allConnectedNodes = allConnectedNodes.concat(
+          network.getConnectedNodes(connectedNodes[j])
+        );
+      }
+    }
+
+    // all second degree nodes get a different color and their label back
+    for (i = 0; i < allConnectedNodes.length; i++) {
+      // allNodes[allConnectedNodes[i]].color = "pink";
+      allNodes[allConnectedNodes[i]].color = "rgba(150,150,150,0.75)";
+      if (allNodes[allConnectedNodes[i]].hiddenLabel !== undefined) {
+        allNodes[allConnectedNodes[i]].label =
+          allNodes[allConnectedNodes[i]].hiddenLabel;
+        allNodes[allConnectedNodes[i]].hiddenLabel = undefined;
+      }
+    }
+
+    // all first degree nodes get their own color and their label back
+    for (i = 0; i < connectedNodes.length; i++) {
+      // allNodes[connectedNodes[i]].color = undefined;
+      allNodes[connectedNodes[i]].color = nodeColors[connectedNodes[i]];
+      if (allNodes[connectedNodes[i]].hiddenLabel !== undefined) {
+        allNodes[connectedNodes[i]].label =
+          allNodes[connectedNodes[i]].hiddenLabel;
+        allNodes[connectedNodes[i]].hiddenLabel = undefined;
+      }
+    }
+
+    // the main node gets its own color and its label back.
+    // allNodes[selectedNode].color = undefined;
+    allNodes[selectedNode].color = nodeColors[selectedNode];
+    if (allNodes[selectedNode].hiddenLabel !== undefined) {
+      allNodes[selectedNode].label = allNodes[selectedNode].hiddenLabel;
+      allNodes[selectedNode].hiddenLabel = undefined;
+    }
+  } else if (highlightActive === true) {
+    // console.log("highlightActive was true");
+    // reset all nodes
+    for (let nodeId in allNodes) {
+      // allNodes[nodeId].color = "purple";
+      allNodes[nodeId].color = nodeColors[nodeId];
+      // delete allNodes[nodeId].color;
+      if (allNodes[nodeId].hiddenLabel !== undefined) {
+        allNodes[nodeId].label = allNodes[nodeId].hiddenLabel;
+        allNodes[nodeId].hiddenLabel = undefined;
+      }
+    }
+    highlightActive = false;
+  }
+
+  // transform the object into an array
+  var updateArray = [];
+  if (params.nodes.length > 0) {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        // console.log(allNodes[nodeId]);
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  } else {
+    // console.log("Nothing was selected");
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        // console.log(allNodes[nodeId]);
+        // allNodes[nodeId].color = {};
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  }
+}
+
+function filterHighlight(params) {
+  allNodes = nodes.get({ returnType: "Object" });
+  // if something is selected:
+  if (params.nodes.length > 0) {
+    filterActive = true;
+    let selectedNodes = params.nodes;
+
+    // hiding all nodes and saving the label
+    for (let nodeId in allNodes) {
+      allNodes[nodeId].hidden = true;
+      if (allNodes[nodeId].savedLabel === undefined) {
+        allNodes[nodeId].savedLabel = allNodes[nodeId].label;
+        allNodes[nodeId].label = undefined;
+      }
+    }
+
+    for (let i=0; i < selectedNodes.length; i++) {
+      allNodes[selectedNodes[i]].hidden = false;
+      if (allNodes[selectedNodes[i]].savedLabel !== undefined) {
+        allNodes[selectedNodes[i]].label = allNodes[selectedNodes[i]].savedLabel;
+        allNodes[selectedNodes[i]].savedLabel = undefined;
+      }
+    }
+
+  } else if (filterActive === true) {
+    // reset all nodes
+    for (let nodeId in allNodes) {
+      allNodes[nodeId].hidden = false;
+      if (allNodes[nodeId].savedLabel !== undefined) {
+        allNodes[nodeId].label = allNodes[nodeId].savedLabel;
+        allNodes[nodeId].savedLabel = undefined;
+      }
+    }
+    filterActive = false;
+  }
+
+  // transform the object into an array
+  var updateArray = [];
+  if (params.nodes.length > 0) {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  } else {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  }
+}
+
+function selectNode(nodes) {
+  network.selectNodes(nodes);
+  neighbourhoodHighlight({ nodes: nodes });
+  return nodes;
+}
+
+function selectNodes(nodes) {
+  network.selectNodes(nodes);
+  filterHighlight({nodes: nodes});
+  return nodes;
+}
+
+function highlightFilter(filter) {
+  let selectedNodes = []
+  let selectedProp = filter['property']
+  if (filter['item'] === 'node') {
+    let allNodes = nodes.get({ returnType: "Object" });
+    for (let nodeId in allNodes) {
+      if (allNodes[nodeId][selectedProp] && filter['value'].includes((allNodes[nodeId][selectedProp]).toString())) {
+        selectedNodes.push(nodeId)
+      }
+    }
+  }
+  else if (filter['item'] === 'edge'){
+    let allEdges = edges.get({returnType: 'object'});
+    // check if the selected property exists for selected edge and select the nodes connected to the edge
+    for (let edge in allEdges) {
+      if (allEdges[edge][selectedProp] && filter['value'].includes((allEdges[edge][selectedProp]).toString())) {
+        selectedNodes.push(allEdges[edge]['from'])
+        selectedNodes.push(allEdges[edge]['to'])
+      }
+    }
+  }
+  selectNodes(selectedNodes)
+}</script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+            
+            
+            
+            
+            
+
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 750px;
+                 background-color: #222222;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+             #loadingBar {
+                 position:absolute;
+                 top:0px;
+                 left:0px;
+                 width: 100%;
+                 height: 750px;
+                 background-color:rgba(200,200,200,0.8);
+                 -webkit-transition: all 0.5s ease;
+                 -moz-transition: all 0.5s ease;
+                 -ms-transition: all 0.5s ease;
+                 -o-transition: all 0.5s ease;
+                 transition: all 0.5s ease;
+                 opacity:1;
+             }
+
+             #bar {
+                 position:absolute;
+                 top:0px;
+                 left:0px;
+                 width:20px;
+                 height:20px;
+                 margin:auto auto auto auto;
+                 border-radius:11px;
+                 border:2px solid rgba(30,30,30,0.05);
+                 background: rgb(0, 173, 246); /* Old browsers */
+                 box-shadow: 2px 0px 4px rgba(0,0,0,0.4);
+             }
+
+             #border {
+                 position:absolute;
+                 top:10px;
+                 left:10px;
+                 width:500px;
+                 height:23px;
+                 margin:auto auto auto auto;
+                 box-shadow: 0px 0px 4px rgba(0,0,0,0.2);
+                 border-radius:10px;
+             }
+
+             #text {
+                 position:absolute;
+                 top:8px;
+                 left:530px;
+                 width:30px;
+                 height:50px;
+                 margin:auto auto auto auto;
+                 font-size:22px;
+                 color: #000000;
+             }
+
+             div.outerBorder {
+                 position:relative;
+                 top:400px;
+                 width:600px;
+                 height:44px;
+                 margin:auto auto auto auto;
+                 border:8px solid rgba(0,0,0,0.1);
+                 background: rgb(252,252,252); /* Old browsers */
+                 background: -moz-linear-gradient(top,  rgba(252,252,252,1) 0%, rgba(237,237,237,1) 100%); /* FF3.6+ */
+                 background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(252,252,252,1)), color-stop(100%,rgba(237,237,237,1))); /* Chrome,Safari4+ */
+                 background: -webkit-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* Chrome10+,Safari5.1+ */
+                 background: -o-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* Opera 11.10+ */
+                 background: -ms-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* IE10+ */
+                 background: linear-gradient(to bottom,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* W3C */
+                 filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fcfcfc', endColorstr='#ededed',GradientType=0 ); /* IE6-9 */
+                 border-radius:72px;
+                 box-shadow: 0px 0px 10px rgba(0,0,0,0.2);
+             }
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+            <div id="loadingBar">
+              <div class="outerBorder">
+                <div id="text">0%</div>
+                <div id="border">
+                  <div id="bar"></div>
+                </div>
+              </div>
+            </div>
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#97c2fc", "font": {"color": "white"}, "id": "overspeeed", "label": "overspeeed", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "kolsonk", "label": "kolsonk", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "moby323", "label": "moby323", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "EchomancerAmberlife", "label": "EchomancerAmberlife", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "sefn19", "label": "sefn19", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "ReginaMark", "label": "ReginaMark", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "mdlt97", "label": "mdlt97", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "RobertGracie", "label": "RobertGracie", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "spongesandpolarbears", "label": "spongesandpolarbears", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Isfahaninejad", "label": "Isfahaninejad", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Aratho", "label": "Aratho", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "HycarfFri", "label": "HycarfFri", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "SHORT-CIRCUT", "label": "SHORT-CIRCUT", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "theredviperod", "label": "theredviperod", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Man0nTheMoon915", "label": "Man0nTheMoon915", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "fawazaa", "label": "fawazaa", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "poisoned_mouse", "label": "poisoned_mouse", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "leedler", "label": "leedler", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Maelehn", "label": "Maelehn", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "OrangeLimeZest", "label": "OrangeLimeZest", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "RaptorDelta", "label": "RaptorDelta", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "SprayAndPay69", "label": "SprayAndPay69", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "theheliumhilltopper", "label": "theheliumhilltopper", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Satan_su", "label": "Satan_su", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "AnyHolesAGoal", "label": "AnyHolesAGoal", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "TauSigmaNova", "label": "TauSigmaNova", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Steven_2769", "label": "Steven_2769", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Turboleks", "label": "Turboleks", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "wait-_what", "label": "wait-_what", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "misguidedkent", "label": "misguidedkent", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "legoluka", "label": "legoluka", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "massproducerofwords", "label": "massproducerofwords", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Eferver", "label": "Eferver", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "eannasheridan", "label": "eannasheridan", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Hakimigini", "label": "Hakimigini", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "GeneralFrievolous", "label": "GeneralFrievolous", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "ItzDp", "label": "ItzDp", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "jamisram", "label": "jamisram", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "barth_", "label": "barth_", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "WokeGoebbels", "label": "WokeGoebbels", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "iSleepUpsideDown", "label": "iSleepUpsideDown", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "SubcooledBoiling", "label": "SubcooledBoiling", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "TeeBeeSee", "label": "TeeBeeSee", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "ExistingReach9658", "label": "ExistingReach9658", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "thatwasfun23", "label": "thatwasfun23", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "waresmarufy", "label": "waresmarufy", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "iceup17", "label": "iceup17", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "awpathar", "label": "awpathar", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Hazey652", "label": "Hazey652", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "ANINETEEN", "label": "ANINETEEN", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "KoeiNL", "label": "KoeiNL", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "dcoreo", "label": "dcoreo", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "RomuRaf", "label": "RomuRaf", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Top_Excuse1680", "label": "Top_Excuse1680", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Jlx_27", "label": "Jlx_27", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "krishal_743", "label": "krishal_743", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "are_you_a_walrus", "label": "are_you_a_walrus", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "KaamDeveloper", "label": "KaamDeveloper", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "HyenaDistinct9600", "label": "HyenaDistinct9600", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "LordOfTheTennisDance", "label": "LordOfTheTennisDance", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Firefox72", "label": "Firefox72", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "KingPutina", "label": "KingPutina", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "TheBrightman", "label": "TheBrightman", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "3luejays", "label": "3luejays", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "junpei7", "label": "junpei7", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "DrizzyVert", "label": "DrizzyVert", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Rorasaurus_Prime", "label": "Rorasaurus_Prime", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Waterblink", "label": "Waterblink", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "TheCeramicLlama", "label": "TheCeramicLlama", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "the_mean_guy_is_here", "label": "the_mean_guy_is_here", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "VitorGBarreto", "label": "VitorGBarreto", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "geniusandy87", "label": "geniusandy87", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "rohitandley", "label": "rohitandley", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "snownsurf2020", "label": "snownsurf2020", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "PEA_IN_MY_ASS8815", "label": "PEA_IN_MY_ASS8815", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "glenn1812", "label": "glenn1812", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Puzzleheaded-Rain230", "label": "Puzzleheaded-Rain230", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Imsosaaad", "label": "Imsosaaad", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Nexusu", "label": "Nexusu", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Gabriela_dc", "label": "Gabriela_dc", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "droppokeguy", "label": "droppokeguy", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Pascalwb", "label": "Pascalwb", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Rhythm_Morgan", "label": "Rhythm_Morgan", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Mueton", "label": "Mueton", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "wicktus", "label": "wicktus", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Cekeste", "label": "Cekeste", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Honourstly", "label": "Honourstly", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "HopHunter420", "label": "HopHunter420", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "TODO_getLife", "label": "TODO_getLife", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "nem091", "label": "nem091", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Pece17", "label": "Pece17", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Maxamus93", "label": "Maxamus93", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "42_c3_b6_67", "label": "42_c3_b6_67", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Platypus-Music", "label": "Platypus-Music", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "nahnonameman", "label": "nahnonameman", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Rosieu", "label": "Rosieu", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Nepgyaaaaaaa", "label": "Nepgyaaaaaaa", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "callmelampshade", "label": "callmelampshade", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "anemic_royaltea", "label": "anemic_royaltea", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "PEEWUN", "label": "PEEWUN", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "ShamrockStudios", "label": "ShamrockStudios", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "LilArmy", "label": "LilArmy", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "f12016", "label": "f12016", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "jadeelf254", "label": "jadeelf254", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Doalt", "label": "Doalt", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "ZealousHorror", "label": "ZealousHorror", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "CrazyRah", "label": "CrazyRah", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Satisfied-Orange", "label": "Satisfied-Orange", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Spockyt", "label": "Spockyt", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "CilanEAmber", "label": "CilanEAmber", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "EternalFront", "label": "EternalFront", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "saposapot", "label": "saposapot", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Takis12", "label": "Takis12", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "ggalinismycunt", "label": "ggalinismycunt", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "mercedeskyron", "label": "mercedeskyron", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "cokush", "label": "cokush", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "2905Pascal", "label": "2905Pascal", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Callejon007", "label": "Callejon007", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "scope_creep", "label": "scope_creep", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Dbwasson", "label": "Dbwasson", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Hoaxygen", "label": "Hoaxygen", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "NoisyBoy894", "label": "NoisyBoy894", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "0oodruidoo0", "label": "0oodruidoo0", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "mantra3105", "label": "mantra3105", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Eleazaras", "label": "Eleazaras", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Palmerstroll", "label": "Palmerstroll", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Pro4TLZZ", "label": "Pro4TLZZ", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "nebiliym", "label": "nebiliym", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Skeeter1020", "label": "Skeeter1020", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Blanchimont", "label": "Blanchimont", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Rude_Journalist", "label": "Rude_Journalist", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "bwoah07_gp2", "label": "bwoah07_gp2", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "ZephyrSonic", "label": "ZephyrSonic", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Joe_PM2804", "label": "Joe_PM2804", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "BansheeRamen", "label": "BansheeRamen", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "magony", "label": "magony", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "danhoeg", "label": "danhoeg", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "ContentPuff", "label": "ContentPuff", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "marahute85", "label": "marahute85", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "aadzwantstoknow", "label": "aadzwantstoknow", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "notimetosmoke", "label": "notimetosmoke", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "AutoModerator", "label": "AutoModerator", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "throwaway44624", "label": "throwaway44624", "shape": "dot", "size": 10}]);
+                  edges = new vis.DataSet([{"from": "overspeeed", "to": "kolsonk", "width": 18}, {"from": "overspeeed", "to": "moby323", "width": 6}, {"from": "overspeeed", "to": "EchomancerAmberlife", "width": 8}, {"from": "overspeeed", "to": "sefn19", "width": 12}, {"from": "overspeeed", "to": "ReginaMark", "width": 30}, {"from": "overspeeed", "to": "mdlt97", "width": 8}, {"from": "overspeeed", "to": "RobertGracie", "width": 13}, {"from": "overspeeed", "to": "spongesandpolarbears", "width": 10}, {"from": "overspeeed", "to": "Isfahaninejad", "width": 7}, {"from": "overspeeed", "to": "Aratho", "width": 9}, {"from": "overspeeed", "to": "HycarfFri", "width": 8}, {"from": "overspeeed", "to": "SHORT-CIRCUT", "width": 14}, {"from": "overspeeed", "to": "theredviperod", "width": 6}, {"from": "overspeeed", "to": "Man0nTheMoon915", "width": 8}, {"from": "overspeeed", "to": "fawazaa", "width": 8}, {"from": "overspeeed", "to": "poisoned_mouse", "width": 8}, {"from": "overspeeed", "to": "leedler", "width": 6}, {"from": "overspeeed", "to": "Maelehn", "width": 9}, {"from": "overspeeed", "to": "OrangeLimeZest", "width": 11}, {"from": "overspeeed", "to": "RaptorDelta", "width": 6}, {"from": "overspeeed", "to": "SprayAndPay69", "width": 11}, {"from": "overspeeed", "to": "theheliumhilltopper", "width": 8}, {"from": "overspeeed", "to": "Satan_su", "width": 13}, {"from": "overspeeed", "to": "AnyHolesAGoal", "width": 6}, {"from": "overspeeed", "to": "TauSigmaNova", "width": 9}, {"from": "overspeeed", "to": "Steven_2769", "width": 10}, {"from": "overspeeed", "to": "Turboleks", "width": 6}, {"from": "overspeeed", "to": "wait-_what", "width": 6}, {"from": "overspeeed", "to": "misguidedkent", "width": 8}, {"from": "overspeeed", "to": "legoluka", "width": 9}, {"from": "overspeeed", "to": "massproducerofwords", "width": 6}, {"from": "overspeeed", "to": "Eferver", "width": 8}, {"from": "overspeeed", "to": "eannasheridan", "width": 7}, {"from": "overspeeed", "to": "Hakimigini", "width": 16}, {"from": "overspeeed", "to": "GeneralFrievolous", "width": 8}, {"from": "overspeeed", "to": "ItzDp", "width": 8}, {"from": "overspeeed", "to": "jamisram", "width": 6}, {"from": "overspeeed", "to": "barth_", "width": 16}, {"from": "overspeeed", "to": "WokeGoebbels", "width": 6}, {"from": "overspeeed", "to": "iSleepUpsideDown", "width": 7}, {"from": "overspeeed", "to": "SubcooledBoiling", "width": 9}, {"from": "overspeeed", "to": "TeeBeeSee", "width": 6}, {"from": "overspeeed", "to": "ExistingReach9658", "width": 8}, {"from": "overspeeed", "to": "thatwasfun23", "width": 8}, {"from": "overspeeed", "to": "waresmarufy", "width": 8}, {"from": "overspeeed", "to": "iceup17", "width": 6}, {"from": "overspeeed", "to": "awpathar", "width": 7}, {"from": "overspeeed", "to": "Hazey652", "width": 7}, {"from": "overspeeed", "to": "ANINETEEN", "width": 13}, {"from": "overspeeed", "to": "KoeiNL", "width": 6}, {"from": "overspeeed", "to": "dcoreo", "width": 7}, {"from": "overspeeed", "to": "RomuRaf", "width": 6}, {"from": "overspeeed", "to": "Top_Excuse1680", "width": 7}, {"from": "overspeeed", "to": "Jlx_27", "width": 8}, {"from": "overspeeed", "to": "krishal_743", "width": 6}, {"from": "overspeeed", "to": "are_you_a_walrus", "width": 7}, {"from": "overspeeed", "to": "KaamDeveloper", "width": 11}, {"from": "overspeeed", "to": "HyenaDistinct9600", "width": 19}, {"from": "overspeeed", "to": "LordOfTheTennisDance", "width": 6}, {"from": "overspeeed", "to": "Firefox72", "width": 7}, {"from": "overspeeed", "to": "KingPutina", "width": 6}, {"from": "overspeeed", "to": "TheBrightman", "width": 10}, {"from": "overspeeed", "to": "3luejays", "width": 7}, {"from": "overspeeed", "to": "junpei7", "width": 7}, {"from": "overspeeed", "to": "DrizzyVert", "width": 6}, {"from": "overspeeed", "to": "Rorasaurus_Prime", "width": 6}, {"from": "overspeeed", "to": "Waterblink", "width": 7}, {"from": "overspeeed", "to": "TheCeramicLlama", "width": 6}, {"from": "overspeeed", "to": "the_mean_guy_is_here", "width": 6}, {"from": "overspeeed", "to": "VitorGBarreto", "width": 6}, {"from": "overspeeed", "to": "geniusandy87", "width": 7}, {"from": "overspeeed", "to": "rohitandley", "width": 6}, {"from": "overspeeed", "to": "snownsurf2020", "width": 8}, {"from": "overspeeed", "to": "PEA_IN_MY_ASS8815", "width": 6}, {"from": "kolsonk", "to": "glenn1812", "width": 6}, {"from": "RobertGracie", "to": "glenn1812", "width": 26}, {"from": "RobertGracie", "to": "Puzzleheaded-Rain230", "width": 6}, {"from": "RobertGracie", "to": "Aratho", "width": 6}, {"from": "Isfahaninejad", "to": "Imsosaaad", "width": 7}, {"from": "Aratho", "to": "glenn1812", "width": 13}, {"from": "glenn1812", "to": "Nexusu", "width": 14}, {"from": "glenn1812", "to": "Gabriela_dc", "width": 6}, {"from": "glenn1812", "to": "Jlx_27", "width": 10}, {"from": "glenn1812", "to": "eannasheridan", "width": 13}, {"from": "glenn1812", "to": "droppokeguy", "width": 9}, {"from": "glenn1812", "to": "Pascalwb", "width": 10}, {"from": "glenn1812", "to": "Rhythm_Morgan", "width": 12}, {"from": "glenn1812", "to": "Mueton", "width": 7}, {"from": "glenn1812", "to": "wicktus", "width": 7}, {"from": "glenn1812", "to": "Cekeste", "width": 6}, {"from": "glenn1812", "to": "ANINETEEN", "width": 9}, {"from": "glenn1812", "to": "Honourstly", "width": 7}, {"from": "glenn1812", "to": "HopHunter420", "width": 8}, {"from": "glenn1812", "to": "TODO_getLife", "width": 6}, {"from": "glenn1812", "to": "nem091", "width": 6}, {"from": "glenn1812", "to": "Pece17", "width": 10}, {"from": "glenn1812", "to": "Maxamus93", "width": 6}, {"from": "glenn1812", "to": "42_c3_b6_67", "width": 6}, {"from": "glenn1812", "to": "Platypus-Music", "width": 7}, {"from": "glenn1812", "to": "nahnonameman", "width": 9}, {"from": "glenn1812", "to": "Rosieu", "width": 11}, {"from": "glenn1812", "to": "Nepgyaaaaaaa", "width": 6}, {"from": "glenn1812", "to": "callmelampshade", "width": 9}, {"from": "glenn1812", "to": "anemic_royaltea", "width": 6}, {"from": "glenn1812", "to": "PEEWUN", "width": 6}, {"from": "glenn1812", "to": "Rorasaurus_Prime", "width": 6}, {"from": "glenn1812", "to": "ShamrockStudios", "width": 7}, {"from": "glenn1812", "to": "LilArmy", "width": 6}, {"from": "glenn1812", "to": "f12016", "width": 7}, {"from": "glenn1812", "to": "jadeelf254", "width": 10}, {"from": "glenn1812", "to": "Doalt", "width": 6}, {"from": "glenn1812", "to": "ZealousHorror", "width": 6}, {"from": "glenn1812", "to": "KaamDeveloper", "width": 15}, {"from": "glenn1812", "to": "CrazyRah", "width": 6}, {"from": "glenn1812", "to": "Satisfied-Orange", "width": 9}, {"from": "glenn1812", "to": "Spockyt", "width": 6}, {"from": "glenn1812", "to": "CilanEAmber", "width": 7}, {"from": "glenn1812", "to": "EternalFront", "width": 7}, {"from": "glenn1812", "to": "saposapot", "width": 7}, {"from": "glenn1812", "to": "Takis12", "width": 8}, {"from": "glenn1812", "to": "ggalinismycunt", "width": 6}, {"from": "glenn1812", "to": "mercedeskyron", "width": 7}, {"from": "glenn1812", "to": "cokush", "width": 6}, {"from": "glenn1812", "to": "2905Pascal", "width": 7}, {"from": "glenn1812", "to": "Callejon007", "width": 7}, {"from": "glenn1812", "to": "scope_creep", "width": 7}, {"from": "glenn1812", "to": "Dbwasson", "width": 6}, {"from": "glenn1812", "to": "Hoaxygen", "width": 6}, {"from": "glenn1812", "to": "NoisyBoy894", "width": 9}, {"from": "glenn1812", "to": "0oodruidoo0", "width": 8}, {"from": "glenn1812", "to": "mantra3105", "width": 8}, {"from": "glenn1812", "to": "Eleazaras", "width": 8}, {"from": "glenn1812", "to": "Palmerstroll", "width": 6}, {"from": "glenn1812", "to": "Pro4TLZZ", "width": 8}, {"from": "glenn1812", "to": "nebiliym", "width": 6}, {"from": "glenn1812", "to": "SubcooledBoiling", "width": 7}, {"from": "glenn1812", "to": "Skeeter1020", "width": 6}, {"from": "glenn1812", "to": "Blanchimont", "width": 6}, {"from": "glenn1812", "to": "Firefox72", "width": 10}, {"from": "glenn1812", "to": "Rude_Journalist", "width": 7}, {"from": "glenn1812", "to": "bwoah07_gp2", "width": 12}, {"from": "glenn1812", "to": "ZephyrSonic", "width": 10}, {"from": "glenn1812", "to": "Joe_PM2804", "width": 6}, {"from": "glenn1812", "to": "BansheeRamen", "width": 6}, {"from": "Nexusu", "to": "callmelampshade", "width": 6}, {"from": "ANINETEEN", "to": "magony", "width": 6}, {"from": "HopHunter420", "to": "danhoeg", "width": 9}, {"from": "SprayAndPay69", "to": "ContentPuff", "width": 6}, {"from": "KaamDeveloper", "to": "marahute85", "width": 6}, {"from": "Firefox72", "to": "marahute85", "width": 7}, {"from": "DrizzyVert", "to": "ContentPuff", "width": 6}, {"from": "jadeelf254", "to": "aadzwantstoknow", "width": 9}, {"from": "jadeelf254", "to": "notimetosmoke", "width": 9}, {"from": "ContentPuff", "to": "AutoModerator", "width": 8}, {"from": "marahute85", "to": "throwaway44624", "width": 6}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "barnesHut": {
+            "avoidOverlap": 0,
+            "centralGravity": 0.3,
+            "damping": 0.09,
+            "gravitationalConstant": -80000,
+            "springConstant": 0.001,
+            "springLength": 250
+        },
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+                      network.on("stabilizationProgress", function(params) {
+                          document.getElementById('loadingBar').removeAttribute("style");
+                          var maxWidth = 496;
+                          var minWidth = 20;
+                          var widthFactor = params.iterations/params.total;
+                          var width = Math.max(minWidth,maxWidth * widthFactor);
+                          document.getElementById('bar').style.width = width + 'px';
+                          document.getElementById('text').innerHTML = Math.round(widthFactor*100) + '%';
+                      });
+                      network.once("stabilizationIterationsDone", function() {
+                          document.getElementById('text').innerHTML = '100%';
+                          document.getElementById('bar').style.width = '496px';
+                          document.getElementById('loadingBar').style.opacity = 0;
+                          // really clean the dom element
+                          setTimeout(function () {document.getElementById('loadingBar').style.display = 'none';}, 500);
+                      });
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

@@ -1,0 +1,258 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 750px;
+                 background-color: #222222;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+             #loadingBar {
+                 position:absolute;
+                 top:0px;
+                 left:0px;
+                 width: 100%;
+                 height: 750px;
+                 background-color:rgba(200,200,200,0.8);
+                 -webkit-transition: all 0.5s ease;
+                 -moz-transition: all 0.5s ease;
+                 -ms-transition: all 0.5s ease;
+                 -o-transition: all 0.5s ease;
+                 transition: all 0.5s ease;
+                 opacity:1;
+             }
+
+             #bar {
+                 position:absolute;
+                 top:0px;
+                 left:0px;
+                 width:20px;
+                 height:20px;
+                 margin:auto auto auto auto;
+                 border-radius:11px;
+                 border:2px solid rgba(30,30,30,0.05);
+                 background: rgb(0, 173, 246); /* Old browsers */
+                 box-shadow: 2px 0px 4px rgba(0,0,0,0.4);
+             }
+
+             #border {
+                 position:absolute;
+                 top:10px;
+                 left:10px;
+                 width:500px;
+                 height:23px;
+                 margin:auto auto auto auto;
+                 box-shadow: 0px 0px 4px rgba(0,0,0,0.2);
+                 border-radius:10px;
+             }
+
+             #text {
+                 position:absolute;
+                 top:8px;
+                 left:530px;
+                 width:30px;
+                 height:50px;
+                 margin:auto auto auto auto;
+                 font-size:22px;
+                 color: #000000;
+             }
+
+             div.outerBorder {
+                 position:relative;
+                 top:400px;
+                 width:600px;
+                 height:44px;
+                 margin:auto auto auto auto;
+                 border:8px solid rgba(0,0,0,0.1);
+                 background: rgb(252,252,252); /* Old browsers */
+                 background: -moz-linear-gradient(top,  rgba(252,252,252,1) 0%, rgba(237,237,237,1) 100%); /* FF3.6+ */
+                 background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(252,252,252,1)), color-stop(100%,rgba(237,237,237,1))); /* Chrome,Safari4+ */
+                 background: -webkit-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* Chrome10+,Safari5.1+ */
+                 background: -o-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* Opera 11.10+ */
+                 background: -ms-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* IE10+ */
+                 background: linear-gradient(to bottom,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* W3C */
+                 filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fcfcfc', endColorstr='#ededed',GradientType=0 ); /* IE6-9 */
+                 border-radius:72px;
+                 box-shadow: 0px 0px 10px rgba(0,0,0,0.2);
+             }
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+            <div id="loadingBar">
+              <div class="outerBorder">
+                <div id="text">0%</div>
+                <div id="border">
+                  <div id="bar"></div>
+                </div>
+              </div>
+            </div>
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "orange", "font": {"color": "white"}, "id": "DarthBuzzard", "label": "DarthBuzzard", "shape": "dot", "title": "DarthBuzzard Neighbors:\u003cbr\u003eabraxas1\u003cbr\u003edvddesign\u003cbr\u003eWild-Combination-246\u003cbr\u003eThud2\u003cbr\u003enibbawecoo_\u003cbr\u003eRamenJunkie\u003cbr\u003eJefferyTheQuaxly\u003cbr\u003eCetun\u003cbr\u003escarabic\u003cbr\u003emike0sd\u003cbr\u003ebugalou\u003cbr\u003ecitizin-x", "value": 12}, {"color": "orange", "font": {"color": "white"}, "id": "RamenJunkie", "label": "RamenJunkie", "shape": "dot", "title": "RamenJunkie Neighbors:\u003cbr\u003eDevilsAdvocate77\u003cbr\u003eBlueSkySummers\u003cbr\u003eDarthBuzzard", "value": 3}, {"color": "orange", "font": {"color": "white"}, "id": "Thud2", "label": "Thud2", "shape": "dot", "title": "Thud2 Neighbors:\u003cbr\u003eDaveFoSrs\u003cbr\u003eSwampShooterSeabass\u003cbr\u003eDarthBuzzard", "value": 3}, {"color": "orange", "font": {"color": "white"}, "id": "nibbawecoo_", "label": "nibbawecoo_", "shape": "dot", "title": "nibbawecoo_ Neighbors:\u003cbr\u003eDarthBuzzard", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "abraxas1", "label": "abraxas1", "shape": "dot", "title": "abraxas1 Neighbors:\u003cbr\u003eDarthBuzzard", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "bugalou", "label": "bugalou", "shape": "dot", "title": "bugalou Neighbors:\u003cbr\u003eDarthBuzzard", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "dvddesign", "label": "dvddesign", "shape": "dot", "title": "dvddesign Neighbors:\u003cbr\u003eDarthBuzzard", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "citizin-x", "label": "citizin-x", "shape": "dot", "title": "citizin-x Neighbors:\u003cbr\u003eDarthBuzzard", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "scarabic", "label": "scarabic", "shape": "dot", "title": "scarabic Neighbors:\u003cbr\u003eDarthBuzzard", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "mike0sd", "label": "mike0sd", "shape": "dot", "title": "mike0sd Neighbors:\u003cbr\u003eDarthBuzzard", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "Wild-Combination-246", "label": "Wild-Combination-246", "shape": "dot", "title": "Wild-Combination-246 Neighbors:\u003cbr\u003eFauxShizzle\u003cbr\u003eDarthBuzzard", "value": 2}, {"color": "orange", "font": {"color": "white"}, "id": "JefferyTheQuaxly", "label": "JefferyTheQuaxly", "shape": "dot", "title": "JefferyTheQuaxly Neighbors:\u003cbr\u003eDarthBuzzard", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "KyleMcMahon", "label": "KyleMcMahon", "shape": "dot", "title": "KyleMcMahon Neighbors:\u003cbr\u003ebeepboopbeepyy\u003cbr\u003eAssertiveWall20\u003cbr\u003eThePeskyMolerat\u003cbr\u003etommygunz007", "value": 4}, {"color": "orange", "font": {"color": "white"}, "id": "tommygunz007", "label": "tommygunz007", "shape": "dot", "title": "tommygunz007 Neighbors:\u003cbr\u003eKyleMcMahon", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "ThePeskyMolerat", "label": "ThePeskyMolerat", "shape": "dot", "title": "ThePeskyMolerat Neighbors:\u003cbr\u003eShabamshazam\u003cbr\u003eKyleMcMahon", "value": 2}, {"color": "orange", "font": {"color": "white"}, "id": "beepboopbeepyy", "label": "beepboopbeepyy", "shape": "dot", "title": "beepboopbeepyy Neighbors:\u003cbr\u003eKyleMcMahon", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "SapientLasagna", "label": "SapientLasagna", "shape": "dot", "title": "SapientLasagna Neighbors:\u003cbr\u003enomorerainpls", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "nomorerainpls", "label": "nomorerainpls", "shape": "dot", "title": "nomorerainpls Neighbors:\u003cbr\u003eSapientLasagna\u003cbr\u003eDilutedGatorade\u003cbr\u003eDanielPhermous\u003cbr\u003esnowbirdnerd", "value": 4}, {"color": "orange", "font": {"color": "white"}, "id": "snowbirdnerd", "label": "snowbirdnerd", "shape": "dot", "title": "snowbirdnerd Neighbors:\u003cbr\u003enomorerainpls", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "Stuffnthangz2", "label": "Stuffnthangz2", "shape": "dot", "title": "Stuffnthangz2 Neighbors:\u003cbr\u003enekollx", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "nekollx", "label": "nekollx", "shape": "dot", "title": "nekollx Neighbors:\u003cbr\u003edamontoo\u003cbr\u003eStuffnthangz2", "value": 2}, {"color": "orange", "font": {"color": "white"}, "id": "lilrabbitfoofoo", "label": "lilrabbitfoofoo", "shape": "dot", "title": "lilrabbitfoofoo Neighbors:\u003cbr\u003ehappyscrappy\u003cbr\u003erejuven8", "value": 2}, {"color": "orange", "font": {"color": "white"}, "id": "rejuven8", "label": "rejuven8", "shape": "dot", "title": "rejuven8 Neighbors:\u003cbr\u003eImaginaryCheetah\u003cbr\u003eDeylanQuel\u003cbr\u003elilrabbitfoofoo", "value": 3}, {"color": "orange", "font": {"color": "white"}, "id": "Shabamshazam", "label": "Shabamshazam", "shape": "dot", "title": "Shabamshazam Neighbors:\u003cbr\u003eThePeskyMolerat\u003cbr\u003eComplex-Reason-3467", "value": 2}, {"color": "orange", "font": {"color": "white"}, "id": "Rogaar", "label": "Rogaar", "shape": "dot", "title": "Rogaar Neighbors:\u003cbr\u003eScarlet109\u003cbr\u003ekleptokiller82\u003cbr\u003eleeemm2a\u003cbr\u003ebabyfacedjanitor", "value": 4}, {"color": "orange", "font": {"color": "white"}, "id": "Scarlet109", "label": "Scarlet109", "shape": "dot", "title": "Scarlet109 Neighbors:\u003cbr\u003eAdamTheMortgageGuru\u003cbr\u003eGooodLooks\u003cbr\u003eRogaar\u003cbr\u003eTidalpancake\u003cbr\u003eBuffalo__\u003cbr\u003eSuper-Branz-Gang", "value": 6}, {"color": "orange", "font": {"color": "white"}, "id": "leeemm2a", "label": "leeemm2a", "shape": "dot", "title": "leeemm2a Neighbors:\u003cbr\u003eRogaar", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "babyfacedjanitor", "label": "babyfacedjanitor", "shape": "dot", "title": "babyfacedjanitor Neighbors:\u003cbr\u003eRogaar", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "kleptokiller82", "label": "kleptokiller82", "shape": "dot", "title": "kleptokiller82 Neighbors:\u003cbr\u003eRogaar", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "DBDude", "label": "DBDude", "shape": "dot", "title": "DBDude Neighbors:\u003cbr\u003eFeather_Tush\u003cbr\u003ejmnugent\u003cbr\u003evanhalenbr\u003cbr\u003eLittle_dick_proudboy", "value": 4}, {"color": "orange", "font": {"color": "white"}, "id": "vanhalenbr", "label": "vanhalenbr", "shape": "dot", "title": "vanhalenbr Neighbors:\u003cbr\u003eDBDude", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "Little_dick_proudboy", "label": "Little_dick_proudboy", "shape": "dot", "title": "Little_dick_proudboy Neighbors:\u003cbr\u003eDBDude", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "jmnugent", "label": "jmnugent", "shape": "dot", "title": "jmnugent Neighbors:\u003cbr\u003eDBDude\u003cbr\u003ehappyscrappy\u003cbr\u003ePositive-Ad-7807", "value": 3}, {"color": "orange", "font": {"color": "white"}, "id": "Feather_Tush", "label": "Feather_Tush", "shape": "dot", "title": "Feather_Tush Neighbors:\u003cbr\u003eDBDude", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "Mizerooskie", "label": "Mizerooskie", "shape": "dot", "title": "Mizerooskie Neighbors:\u003cbr\u003eCertainPassenger\u003cbr\u003eFlipskiZ\u003cbr\u003edamontoo", "value": 3}, {"color": "orange", "font": {"color": "white"}, "id": "damontoo", "label": "damontoo", "shape": "dot", "title": "damontoo Neighbors:\u003cbr\u003eEducation_Waste\u003cbr\u003eMizerooskie\u003cbr\u003eImaginaryCheetah\u003cbr\u003e12358\u003cbr\u003enekollx\u003cbr\u003eHeavyMetalHero\u003cbr\u003eJetAmoeba", "value": 7}, {"color": "orange", "font": {"color": "white"}, "id": "FlipskiZ", "label": "FlipskiZ", "shape": "dot", "title": "FlipskiZ Neighbors:\u003cbr\u003eMizerooskie", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "CertainPassenger", "label": "CertainPassenger", "shape": "dot", "title": "CertainPassenger Neighbors:\u003cbr\u003eJaggedMetalOs\u003cbr\u003eMizerooskie", "value": 2}, {"color": "orange", "font": {"color": "white"}, "id": "JaggedMetalOs", "label": "JaggedMetalOs", "shape": "dot", "title": "JaggedMetalOs Neighbors:\u003cbr\u003eBig_Monkey_77\u003cbr\u003eCertainPassenger", "value": 2}, {"color": "orange", "font": {"color": "white"}, "id": "DerBanzai", "label": "DerBanzai", "shape": "dot", "title": "DerBanzai Neighbors:\u003cbr\u003eway2lazy2care\u003cbr\u003eBlueSkySummers", "value": 2}, {"color": "orange", "font": {"color": "white"}, "id": "way2lazy2care", "label": "way2lazy2care", "shape": "dot", "title": "way2lazy2care Neighbors:\u003cbr\u003eDerBanzai\u003cbr\u003eAtomicSamuraiCyborg\u003cbr\u003eSuiXi3D\u003cbr\u003egizamo\u003cbr\u003eDirtyPolecat", "value": 5}, {"color": "orange", "font": {"color": "white"}, "id": "happyscrappy", "label": "happyscrappy", "shape": "dot", "title": "happyscrappy Neighbors:\u003cbr\u003ecagewilly\u003cbr\u003ejmnugent\u003cbr\u003eCalebDK\u003cbr\u003eAutoBot5\u003cbr\u003eGarbageTheClown\u003cbr\u003eParryandrepost\u003cbr\u003eNotthetrees\u003cbr\u003eTrueDeceiver\u003cbr\u003evote4boat\u003cbr\u003eWhen_Ducks_Attack\u003cbr\u003exrayrocketship\u003cbr\u003eraygundan\u003cbr\u003ejarfil\u003cbr\u003eItsJpeterman\u003cbr\u003eCycode\u003cbr\u003eQuick2Die\u003cbr\u003elilrabbitfoofoo", "value": 17}, {"color": "orange", "font": {"color": "white"}, "id": "jarfil", "label": "jarfil", "shape": "dot", "title": "jarfil Neighbors:\u003cbr\u003ehappyscrappy", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "vote4boat", "label": "vote4boat", "shape": "dot", "title": "vote4boat Neighbors:\u003cbr\u003ehappyscrappy", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "xrayrocketship", "label": "xrayrocketship", "shape": "dot", "title": "xrayrocketship Neighbors:\u003cbr\u003ehappyscrappy", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "raygundan", "label": "raygundan", "shape": "dot", "title": "raygundan Neighbors:\u003cbr\u003ehappyscrappy\u003cbr\u003ethatinfraguy", "value": 2}, {"color": "orange", "font": {"color": "white"}, "id": "Parryandrepost", "label": "Parryandrepost", "shape": "dot", "title": "Parryandrepost Neighbors:\u003cbr\u003ehappyscrappy\u003cbr\u003eBruhWhySoSerious", "value": 2}, {"color": "orange", "font": {"color": "white"}, "id": "SwampShooterSeabass", "label": "SwampShooterSeabass", "shape": "dot", "title": "SwampShooterSeabass Neighbors:\u003cbr\u003eThud2", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "DirtyPolecat", "label": "DirtyPolecat", "shape": "dot", "title": "DirtyPolecat Neighbors:\u003cbr\u003eway2lazy2care\u003cbr\u003eMickPnubTobias99\u003cbr\u003eTandemRigs", "value": 3}, {"color": "orange", "font": {"color": "white"}, "id": "MickPnubTobias99", "label": "MickPnubTobias99", "shape": "dot", "title": "MickPnubTobias99 Neighbors:\u003cbr\u003eDirtyPolecat", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "TandemRigs", "label": "TandemRigs", "shape": "dot", "title": "TandemRigs Neighbors:\u003cbr\u003eDirtyPolecat", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "gizamo", "label": "gizamo", "shape": "dot", "title": "gizamo Neighbors:\u003cbr\u003eway2lazy2care\u003cbr\u003eSciencetist", "value": 2}, {"color": "orange", "font": {"color": "white"}, "id": "DanielPhermous", "label": "DanielPhermous", "shape": "dot", "title": "DanielPhermous Neighbors:\u003cbr\u003eKboythe71\u003cbr\u003eStrokeMyAxe\u003cbr\u003eMaliciousWolf\u003cbr\u003eGiantCrazyOctopus\u003cbr\u003eDefiant_Low_1391\u003cbr\u003eClearskies37\u003cbr\u003eApocrisiary\u003cbr\u003ejlange94\u003cbr\u003eMojoMonster\u003cbr\u003enomorerainpls\u003cbr\u003eStunning_Dealer_4353\u003cbr\u003erognasistu", "value": 12}, {"color": "orange", "font": {"color": "white"}, "id": "jlange94", "label": "jlange94", "shape": "dot", "title": "jlange94 Neighbors:\u003cbr\u003ethisispoopoopeepee\u003cbr\u003eDanielPhermous", "value": 2}, {"color": "orange", "font": {"color": "white"}, "id": "GiantCrazyOctopus", "label": "GiantCrazyOctopus", "shape": "dot", "title": "GiantCrazyOctopus Neighbors:\u003cbr\u003eDanielPhermous", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "MaliciousWolf", "label": "MaliciousWolf", "shape": "dot", "title": "MaliciousWolf Neighbors:\u003cbr\u003eDanielPhermous", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "Kboythe71", "label": "Kboythe71", "shape": "dot", "title": "Kboythe71 Neighbors:\u003cbr\u003eDanielPhermous", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "rognasistu", "label": "rognasistu", "shape": "dot", "title": "rognasistu Neighbors:\u003cbr\u003eDanielPhermous", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "Stunning_Dealer_4353", "label": "Stunning_Dealer_4353", "shape": "dot", "title": "Stunning_Dealer_4353 Neighbors:\u003cbr\u003eDanielPhermous", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "MojoMonster", "label": "MojoMonster", "shape": "dot", "title": "MojoMonster Neighbors:\u003cbr\u003eDanielPhermous", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "StrokeMyAxe", "label": "StrokeMyAxe", "shape": "dot", "title": "StrokeMyAxe Neighbors:\u003cbr\u003eDanielPhermous", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "Defiant_Low_1391", "label": "Defiant_Low_1391", "shape": "dot", "title": "Defiant_Low_1391 Neighbors:\u003cbr\u003eDanielPhermous", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "Sciencetist", "label": "Sciencetist", "shape": "dot", "title": "Sciencetist Neighbors:\u003cbr\u003egizamo", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "GarbageTheClown", "label": "GarbageTheClown", "shape": "dot", "title": "GarbageTheClown Neighbors:\u003cbr\u003ehappyscrappy\u003cbr\u003ecainlikespotatos\u003cbr\u003ewho_you_are", "value": 3}, {"color": "orange", "font": {"color": "white"}, "id": "who_you_are", "label": "who_you_are", "shape": "dot", "title": "who_you_are Neighbors:\u003cbr\u003eGarbageTheClown", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "cainlikespotatos", "label": "cainlikespotatos", "shape": "dot", "title": "cainlikespotatos Neighbors:\u003cbr\u003eGarbageTheClown", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "Education_Waste", "label": "Education_Waste", "shape": "dot", "title": "Education_Waste Neighbors:\u003cbr\u003edamontoo", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "12358", "label": "12358", "shape": "dot", "title": "12358 Neighbors:\u003cbr\u003edamontoo", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "ItsJpeterman", "label": "ItsJpeterman", "shape": "dot", "title": "ItsJpeterman Neighbors:\u003cbr\u003ehappyscrappy", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "DevilsAdvocate77", "label": "DevilsAdvocate77", "shape": "dot", "title": "DevilsAdvocate77 Neighbors:\u003cbr\u003eRamenJunkie", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "LikeAMan_NotAGod", "label": "LikeAMan_NotAGod", "shape": "dot", "title": "LikeAMan_NotAGod Neighbors:\u003cbr\u003eSouth-Philly-Metal\u003cbr\u003ethisispoopoopeepee\u003cbr\u003ecrackez\u003cbr\u003eo_g", "value": 4}, {"color": "orange", "font": {"color": "white"}, "id": "thisispoopoopeepee", "label": "thisispoopoopeepee", "shape": "dot", "title": "thisispoopoopeepee Neighbors:\u003cbr\u003ejlange94\u003cbr\u003eLikeAMan_NotAGod", "value": 2}, {"color": "orange", "font": {"color": "white"}, "id": "South-Philly-Metal", "label": "South-Philly-Metal", "shape": "dot", "title": "South-Philly-Metal Neighbors:\u003cbr\u003eLikeAMan_NotAGod", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "o_g", "label": "o_g", "shape": "dot", "title": "o_g Neighbors:\u003cbr\u003eLikeAMan_NotAGod", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "crackez", "label": "crackez", "shape": "dot", "title": "crackez Neighbors:\u003cbr\u003eLikeAMan_NotAGod", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "IsraeliDonut", "label": "IsraeliDonut", "shape": "dot", "title": "IsraeliDonut Neighbors:\u003cbr\u003eTidalpancake\u003cbr\u003eDazzlerPlus\u003cbr\u003ebarryandorlevon", "value": 3}, {"color": "orange", "font": {"color": "white"}, "id": "Tidalpancake", "label": "Tidalpancake", "shape": "dot", "title": "Tidalpancake Neighbors:\u003cbr\u003eScarlet109\u003cbr\u003eitsnotthenetwork\u003cbr\u003eIsraeliDonut", "value": 3}, {"color": "orange", "font": {"color": "white"}, "id": "barryandorlevon", "label": "barryandorlevon", "shape": "dot", "title": "barryandorlevon Neighbors:\u003cbr\u003eIsraeliDonut", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "DazzlerPlus", "label": "DazzlerPlus", "shape": "dot", "title": "DazzlerPlus Neighbors:\u003cbr\u003eIsraeliDonut", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "Apocrisiary", "label": "Apocrisiary", "shape": "dot", "title": "Apocrisiary Neighbors:\u003cbr\u003eiamatlos\u003cbr\u003eDanielPhermous", "value": 2}, {"color": "orange", "font": {"color": "white"}, "id": "iamatlos", "label": "iamatlos", "shape": "dot", "title": "iamatlos Neighbors:\u003cbr\u003eApocrisiary", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "BlueSkySummers", "label": "BlueSkySummers", "shape": "dot", "title": "BlueSkySummers Neighbors:\u003cbr\u003eemrythelion\u003cbr\u003eDerBanzai\u003cbr\u003eRamenJunkie\u003cbr\u003eCetun", "value": 4}, {"color": "orange", "font": {"color": "white"}, "id": "emrythelion", "label": "emrythelion", "shape": "dot", "title": "emrythelion Neighbors:\u003cbr\u003eBlueSkySummers", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "Cetun", "label": "Cetun", "shape": "dot", "title": "Cetun Neighbors:\u003cbr\u003eBlueSkySummers\u003cbr\u003eDarthBuzzard", "value": 2}, {"color": "orange", "font": {"color": "white"}, "id": "TrueDeceiver", "label": "TrueDeceiver", "shape": "dot", "title": "TrueDeceiver Neighbors:\u003cbr\u003ehappyscrappy", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "Notthetrees", "label": "Notthetrees", "shape": "dot", "title": "Notthetrees Neighbors:\u003cbr\u003ehappyscrappy", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "Big_Monkey_77", "label": "Big_Monkey_77", "shape": "dot", "title": "Big_Monkey_77 Neighbors:\u003cbr\u003eJaggedMetalOs", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "AutoBot5", "label": "AutoBot5", "shape": "dot", "title": "AutoBot5 Neighbors:\u003cbr\u003ehappyscrappy", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "Clearskies37", "label": "Clearskies37", "shape": "dot", "title": "Clearskies37 Neighbors:\u003cbr\u003eDanielPhermous", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "Buffalo__", "label": "Buffalo__", "shape": "dot", "title": "Buffalo__ Neighbors:\u003cbr\u003eScarlet109", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "GooodLooks", "label": "GooodLooks", "shape": "dot", "title": "GooodLooks Neighbors:\u003cbr\u003eScarlet109", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "Super-Branz-Gang", "label": "Super-Branz-Gang", "shape": "dot", "title": "Super-Branz-Gang Neighbors:\u003cbr\u003eScarlet109", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "AssertiveWall20", "label": "AssertiveWall20", "shape": "dot", "title": "AssertiveWall20 Neighbors:\u003cbr\u003eKyleMcMahon", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "DilutedGatorade", "label": "DilutedGatorade", "shape": "dot", "title": "DilutedGatorade Neighbors:\u003cbr\u003enomorerainpls", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "itsnotthenetwork", "label": "itsnotthenetwork", "shape": "dot", "title": "itsnotthenetwork Neighbors:\u003cbr\u003eTidalpancake", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "FauxShizzle", "label": "FauxShizzle", "shape": "dot", "title": "FauxShizzle Neighbors:\u003cbr\u003eWild-Combination-246", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "BruhWhySoSerious", "label": "BruhWhySoSerious", "shape": "dot", "title": "BruhWhySoSerious Neighbors:\u003cbr\u003eParryandrepost", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "Quick2Die", "label": "Quick2Die", "shape": "dot", "title": "Quick2Die Neighbors:\u003cbr\u003ehappyscrappy", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "When_Ducks_Attack", "label": "When_Ducks_Attack", "shape": "dot", "title": "When_Ducks_Attack Neighbors:\u003cbr\u003ehappyscrappy\u003cbr\u003ePuckSR", "value": 2}, {"color": "orange", "font": {"color": "white"}, "id": "SuiXi3D", "label": "SuiXi3D", "shape": "dot", "title": "SuiXi3D Neighbors:\u003cbr\u003eway2lazy2care", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "AtomicSamuraiCyborg", "label": "AtomicSamuraiCyborg", "shape": "dot", "title": "AtomicSamuraiCyborg Neighbors:\u003cbr\u003eway2lazy2care", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "Complex-Reason-3467", "label": "Complex-Reason-3467", "shape": "dot", "title": "Complex-Reason-3467 Neighbors:\u003cbr\u003eShabamshazam\u003cbr\u003eAdamTheMortgageGuru", "value": 2}, {"color": "orange", "font": {"color": "white"}, "id": "AdamTheMortgageGuru", "label": "AdamTheMortgageGuru", "shape": "dot", "title": "AdamTheMortgageGuru Neighbors:\u003cbr\u003eScarlet109\u003cbr\u003eComplex-Reason-3467", "value": 2}, {"color": "orange", "font": {"color": "white"}, "id": "HeavyMetalHero", "label": "HeavyMetalHero", "shape": "dot", "title": "HeavyMetalHero Neighbors:\u003cbr\u003edamontoo", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "cagewilly", "label": "cagewilly", "shape": "dot", "title": "cagewilly Neighbors:\u003cbr\u003ehappyscrappy", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "JetAmoeba", "label": "JetAmoeba", "shape": "dot", "title": "JetAmoeba Neighbors:\u003cbr\u003edamontoo", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "DaveFoSrs", "label": "DaveFoSrs", "shape": "dot", "title": "DaveFoSrs Neighbors:\u003cbr\u003eThud2", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "Positive-Ad-7807", "label": "Positive-Ad-7807", "shape": "dot", "title": "Positive-Ad-7807 Neighbors:\u003cbr\u003ejmnugent", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "ImaginaryCheetah", "label": "ImaginaryCheetah", "shape": "dot", "title": "ImaginaryCheetah Neighbors:\u003cbr\u003erejuven8\u003cbr\u003eTakeTheWheelTV\u003cbr\u003edamontoo", "value": 3}, {"color": "orange", "font": {"color": "white"}, "id": "TakeTheWheelTV", "label": "TakeTheWheelTV", "shape": "dot", "title": "TakeTheWheelTV Neighbors:\u003cbr\u003eImaginaryCheetah", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "DeylanQuel", "label": "DeylanQuel", "shape": "dot", "title": "DeylanQuel Neighbors:\u003cbr\u003erejuven8", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "CalebDK", "label": "CalebDK", "shape": "dot", "title": "CalebDK Neighbors:\u003cbr\u003ehappyscrappy", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "Cycode", "label": "Cycode", "shape": "dot", "title": "Cycode Neighbors:\u003cbr\u003ehappyscrappy", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "PuckSR", "label": "PuckSR", "shape": "dot", "title": "PuckSR Neighbors:\u003cbr\u003eWhen_Ducks_Attack", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "RobToastie", "label": "RobToastie", "shape": "dot", "title": "RobToastie Neighbors:\u003cbr\u003ethatinfraguy", "value": 1}, {"color": "orange", "font": {"color": "white"}, "id": "thatinfraguy", "label": "thatinfraguy", "shape": "dot", "title": "thatinfraguy Neighbors:\u003cbr\u003eraygundan\u003cbr\u003eRobToastie\u003cbr\u003eSonicDethmonkey", "value": 3}, {"color": "orange", "font": {"color": "white"}, "id": "SonicDethmonkey", "label": "SonicDethmonkey", "shape": "dot", "title": "SonicDethmonkey Neighbors:\u003cbr\u003ePlayingTheWrongGame\u003cbr\u003ethatinfraguy", "value": 2}, {"color": "orange", "font": {"color": "white"}, "id": "PlayingTheWrongGame", "label": "PlayingTheWrongGame", "shape": "dot", "title": "PlayingTheWrongGame Neighbors:\u003cbr\u003eSonicDethmonkey", "value": 1}]);
+                  edges = new vis.DataSet([{"color": "orange", "from": "DarthBuzzard", "to": "RamenJunkie", "value": 4}, {"color": "orange", "from": "DarthBuzzard", "to": "Thud2", "value": 3}, {"color": "orange", "from": "DarthBuzzard", "to": "nibbawecoo_", "value": 3}, {"color": "orange", "from": "DarthBuzzard", "to": "abraxas1", "value": 2}, {"color": "orange", "from": "DarthBuzzard", "to": "bugalou", "value": 2}, {"color": "orange", "from": "DarthBuzzard", "to": "dvddesign", "value": 2}, {"color": "orange", "from": "DarthBuzzard", "to": "citizin-x", "value": 2}, {"color": "orange", "from": "DarthBuzzard", "to": "scarabic", "value": 3}, {"color": "orange", "from": "DarthBuzzard", "to": "mike0sd", "value": 3}, {"color": "orange", "from": "DarthBuzzard", "to": "Wild-Combination-246", "value": 2}, {"color": "orange", "from": "DarthBuzzard", "to": "JefferyTheQuaxly", "value": 2}, {"color": "orange", "from": "KyleMcMahon", "to": "tommygunz007", "value": 2}, {"color": "orange", "from": "KyleMcMahon", "to": "ThePeskyMolerat", "value": 2}, {"color": "orange", "from": "KyleMcMahon", "to": "beepboopbeepyy", "value": 3}, {"color": "orange", "from": "SapientLasagna", "to": "nomorerainpls", "value": 2}, {"color": "orange", "from": "nomorerainpls", "to": "snowbirdnerd", "value": 5}, {"color": "orange", "from": "Stuffnthangz2", "to": "nekollx", "value": 2}, {"color": "orange", "from": "lilrabbitfoofoo", "to": "rejuven8", "value": 2}, {"color": "orange", "from": "Shabamshazam", "to": "ThePeskyMolerat", "value": 3}, {"color": "orange", "from": "Rogaar", "to": "Scarlet109", "value": 3}, {"color": "orange", "from": "Rogaar", "to": "leeemm2a", "value": 2}, {"color": "orange", "from": "Rogaar", "to": "babyfacedjanitor", "value": 2}, {"color": "orange", "from": "Rogaar", "to": "kleptokiller82", "value": 2}, {"color": "orange", "from": "DBDude", "to": "vanhalenbr", "value": 2}, {"color": "orange", "from": "DBDude", "to": "Little_dick_proudboy", "value": 2}, {"color": "orange", "from": "DBDude", "to": "jmnugent", "value": 2}, {"color": "orange", "from": "DBDude", "to": "Feather_Tush", "value": 4}, {"color": "orange", "from": "Mizerooskie", "to": "damontoo", "value": 2}, {"color": "orange", "from": "FlipskiZ", "to": "Mizerooskie", "value": 2}, {"color": "orange", "from": "damontoo", "to": "nekollx", "value": 3}, {"color": "orange", "from": "CertainPassenger", "to": "Mizerooskie", "value": 2}, {"color": "orange", "from": "CertainPassenger", "to": "JaggedMetalOs", "value": 2}, {"color": "orange", "from": "DerBanzai", "to": "way2lazy2care", "value": 2}, {"color": "orange", "from": "happyscrappy", "to": "lilrabbitfoofoo", "value": 3}, {"color": "orange", "from": "happyscrappy", "to": "jarfil", "value": 2}, {"color": "orange", "from": "happyscrappy", "to": "jmnugent", "value": 3}, {"color": "orange", "from": "happyscrappy", "to": "vote4boat", "value": 2}, {"color": "orange", "from": "happyscrappy", "to": "xrayrocketship", "value": 2}, {"color": "orange", "from": "happyscrappy", "to": "raygundan", "value": 3}, {"color": "orange", "from": "Parryandrepost", "to": "happyscrappy", "value": 2}, {"color": "orange", "from": "SwampShooterSeabass", "to": "Thud2", "value": 4}, {"color": "orange", "from": "DirtyPolecat", "to": "way2lazy2care", "value": 2}, {"color": "orange", "from": "DirtyPolecat", "to": "MickPnubTobias99", "value": 2}, {"color": "orange", "from": "DirtyPolecat", "to": "TandemRigs", "value": 2}, {"color": "orange", "from": "gizamo", "to": "way2lazy2care", "value": 3}, {"color": "orange", "from": "DanielPhermous", "to": "jlange94", "value": 2}, {"color": "orange", "from": "DanielPhermous", "to": "nomorerainpls", "value": 5}, {"color": "orange", "from": "DanielPhermous", "to": "GiantCrazyOctopus", "value": 2}, {"color": "orange", "from": "DanielPhermous", "to": "MaliciousWolf", "value": 3}, {"color": "orange", "from": "DanielPhermous", "to": "Kboythe71", "value": 3}, {"color": "orange", "from": "DanielPhermous", "to": "rognasistu", "value": 3}, {"color": "orange", "from": "DanielPhermous", "to": "Stunning_Dealer_4353", "value": 3}, {"color": "orange", "from": "DanielPhermous", "to": "MojoMonster", "value": 3}, {"color": "orange", "from": "DanielPhermous", "to": "StrokeMyAxe", "value": 4}, {"color": "orange", "from": "DanielPhermous", "to": "Defiant_Low_1391", "value": 3}, {"color": "orange", "from": "Sciencetist", "to": "gizamo", "value": 3}, {"color": "orange", "from": "GarbageTheClown", "to": "happyscrappy", "value": 2}, {"color": "orange", "from": "GarbageTheClown", "to": "who_you_are", "value": 4}, {"color": "orange", "from": "GarbageTheClown", "to": "cainlikespotatos", "value": 3}, {"color": "orange", "from": "Education_Waste", "to": "damontoo", "value": 2}, {"color": "orange", "from": "12358", "to": "damontoo", "value": 2}, {"color": "orange", "from": "ItsJpeterman", "to": "happyscrappy", "value": 2}, {"color": "orange", "from": "DevilsAdvocate77", "to": "RamenJunkie", "value": 2}, {"color": "orange", "from": "LikeAMan_NotAGod", "to": "thisispoopoopeepee", "value": 3}, {"color": "orange", "from": "LikeAMan_NotAGod", "to": "South-Philly-Metal", "value": 2}, {"color": "orange", "from": "LikeAMan_NotAGod", "to": "o_g", "value": 2}, {"color": "orange", "from": "LikeAMan_NotAGod", "to": "crackez", "value": 6}, {"color": "orange", "from": "IsraeliDonut", "to": "Tidalpancake", "value": 4}, {"color": "orange", "from": "IsraeliDonut", "to": "barryandorlevon", "value": 2}, {"color": "orange", "from": "DazzlerPlus", "to": "IsraeliDonut", "value": 2}, {"color": "orange", "from": "Apocrisiary", "to": "DanielPhermous", "value": 2}, {"color": "orange", "from": "Apocrisiary", "to": "iamatlos", "value": 2}, {"color": "orange", "from": "BlueSkySummers", "to": "RamenJunkie", "value": 3}, {"color": "orange", "from": "BlueSkySummers", "to": "DerBanzai", "value": 3}, {"color": "orange", "from": "BlueSkySummers", "to": "emrythelion", "value": 3}, {"color": "orange", "from": "BlueSkySummers", "to": "Cetun", "value": 4}, {"color": "orange", "from": "TrueDeceiver", "to": "happyscrappy", "value": 3}, {"color": "orange", "from": "Notthetrees", "to": "happyscrappy", "value": 4}, {"color": "orange", "from": "Big_Monkey_77", "to": "JaggedMetalOs", "value": 2}, {"color": "orange", "from": "AutoBot5", "to": "happyscrappy", "value": 2}, {"color": "orange", "from": "Clearskies37", "to": "DanielPhermous", "value": 2}, {"color": "orange", "from": "Buffalo__", "to": "Scarlet109", "value": 4}, {"color": "orange", "from": "GooodLooks", "to": "Scarlet109", "value": 2}, {"color": "orange", "from": "Scarlet109", "to": "Tidalpancake", "value": 2}, {"color": "orange", "from": "Scarlet109", "to": "Super-Branz-Gang", "value": 4}, {"color": "orange", "from": "AssertiveWall20", "to": "KyleMcMahon", "value": 2}, {"color": "orange", "from": "DilutedGatorade", "to": "nomorerainpls", "value": 3}, {"color": "orange", "from": "Tidalpancake", "to": "itsnotthenetwork", "value": 2}, {"color": "orange", "from": "Cetun", "to": "DarthBuzzard", "value": 2}, {"color": "orange", "from": "FauxShizzle", "to": "Wild-Combination-246", "value": 2}, {"color": "orange", "from": "BruhWhySoSerious", "to": "Parryandrepost", "value": 2}, {"color": "orange", "from": "Quick2Die", "to": "happyscrappy", "value": 3}, {"color": "orange", "from": "When_Ducks_Attack", "to": "happyscrappy", "value": 2}, {"color": "orange", "from": "SuiXi3D", "to": "way2lazy2care", "value": 2}, {"color": "orange", "from": "jlange94", "to": "thisispoopoopeepee", "value": 2}, {"color": "orange", "from": "AtomicSamuraiCyborg", "to": "way2lazy2care", "value": 4}, {"color": "orange", "from": "Complex-Reason-3467", "to": "Shabamshazam", "value": 2}, {"color": "orange", "from": "AdamTheMortgageGuru", "to": "Scarlet109", "value": 3}, {"color": "orange", "from": "AdamTheMortgageGuru", "to": "Complex-Reason-3467", "value": 2}, {"color": "orange", "from": "HeavyMetalHero", "to": "damontoo", "value": 3}, {"color": "orange", "from": "cagewilly", "to": "happyscrappy", "value": 2}, {"color": "orange", "from": "JetAmoeba", "to": "damontoo", "value": 2}, {"color": "orange", "from": "DaveFoSrs", "to": "Thud2", "value": 2}, {"color": "orange", "from": "Positive-Ad-7807", "to": "jmnugent", "value": 4}, {"color": "orange", "from": "ImaginaryCheetah", "to": "damontoo", "value": 2}, {"color": "orange", "from": "ImaginaryCheetah", "to": "rejuven8", "value": 5}, {"color": "orange", "from": "ImaginaryCheetah", "to": "TakeTheWheelTV", "value": 3}, {"color": "orange", "from": "DeylanQuel", "to": "rejuven8", "value": 2}, {"color": "orange", "from": "CalebDK", "to": "happyscrappy", "value": 2}, {"color": "orange", "from": "Cycode", "to": "happyscrappy", "value": 4}, {"color": "orange", "from": "PuckSR", "to": "When_Ducks_Attack", "value": 4}, {"color": "orange", "from": "RobToastie", "to": "thatinfraguy", "value": 3}, {"color": "orange", "from": "raygundan", "to": "thatinfraguy", "value": 3}, {"color": "orange", "from": "SonicDethmonkey", "to": "thatinfraguy", "value": 2}, {"color": "orange", "from": "PlayingTheWrongGame", "to": "SonicDethmonkey", "value": 2}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "barnesHut": {
+            "avoidOverlap": 0,
+            "centralGravity": 0.3,
+            "damping": 0.09,
+            "gravitationalConstant": -80000,
+            "springConstant": 0.001,
+            "springLength": 250
+        },
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+                      network.on("stabilizationProgress", function(params) {
+                          document.getElementById('loadingBar').removeAttribute("style");
+                          var maxWidth = 496;
+                          var minWidth = 20;
+                          var widthFactor = params.iterations/params.total;
+                          var width = Math.max(minWidth,maxWidth * widthFactor);
+                          document.getElementById('bar').style.width = width + 'px';
+                          document.getElementById('text').innerHTML = Math.round(widthFactor*100) + '%';
+                      });
+                      network.once("stabilizationIterationsDone", function() {
+                          document.getElementById('text').innerHTML = '100%';
+                          document.getElementById('bar').style.width = '496px';
+                          document.getElementById('loadingBar').style.opacity = 0;
+                          // really clean the dom element
+                          setTimeout(function () {document.getElementById('loadingBar').style.display = 'none';}, 500);
+                      });
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

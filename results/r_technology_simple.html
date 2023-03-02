@@ -1,0 +1,357 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script>function neighbourhoodHighlight(params) {
+  // console.log("in nieghbourhoodhighlight");
+  allNodes = nodes.get({ returnType: "Object" });
+  // originalNodes = JSON.parse(JSON.stringify(allNodes));
+  // if something is selected:
+  if (params.nodes.length > 0) {
+    highlightActive = true;
+    var i, j;
+    var selectedNode = params.nodes[0];
+    var degrees = 2;
+
+    // mark all nodes as hard to read.
+    for (let nodeId in allNodes) {
+      // nodeColors[nodeId] = allNodes[nodeId].color;
+      allNodes[nodeId].color = "rgba(200,200,200,0.5)";
+      if (allNodes[nodeId].hiddenLabel === undefined) {
+        allNodes[nodeId].hiddenLabel = allNodes[nodeId].label;
+        allNodes[nodeId].label = undefined;
+      }
+    }
+    var connectedNodes = network.getConnectedNodes(selectedNode);
+    var allConnectedNodes = [];
+
+    // get the second degree nodes
+    for (i = 1; i < degrees; i++) {
+      for (j = 0; j < connectedNodes.length; j++) {
+        allConnectedNodes = allConnectedNodes.concat(
+          network.getConnectedNodes(connectedNodes[j])
+        );
+      }
+    }
+
+    // all second degree nodes get a different color and their label back
+    for (i = 0; i < allConnectedNodes.length; i++) {
+      // allNodes[allConnectedNodes[i]].color = "pink";
+      allNodes[allConnectedNodes[i]].color = "rgba(150,150,150,0.75)";
+      if (allNodes[allConnectedNodes[i]].hiddenLabel !== undefined) {
+        allNodes[allConnectedNodes[i]].label =
+          allNodes[allConnectedNodes[i]].hiddenLabel;
+        allNodes[allConnectedNodes[i]].hiddenLabel = undefined;
+      }
+    }
+
+    // all first degree nodes get their own color and their label back
+    for (i = 0; i < connectedNodes.length; i++) {
+      // allNodes[connectedNodes[i]].color = undefined;
+      allNodes[connectedNodes[i]].color = nodeColors[connectedNodes[i]];
+      if (allNodes[connectedNodes[i]].hiddenLabel !== undefined) {
+        allNodes[connectedNodes[i]].label =
+          allNodes[connectedNodes[i]].hiddenLabel;
+        allNodes[connectedNodes[i]].hiddenLabel = undefined;
+      }
+    }
+
+    // the main node gets its own color and its label back.
+    // allNodes[selectedNode].color = undefined;
+    allNodes[selectedNode].color = nodeColors[selectedNode];
+    if (allNodes[selectedNode].hiddenLabel !== undefined) {
+      allNodes[selectedNode].label = allNodes[selectedNode].hiddenLabel;
+      allNodes[selectedNode].hiddenLabel = undefined;
+    }
+  } else if (highlightActive === true) {
+    // console.log("highlightActive was true");
+    // reset all nodes
+    for (let nodeId in allNodes) {
+      // allNodes[nodeId].color = "purple";
+      allNodes[nodeId].color = nodeColors[nodeId];
+      // delete allNodes[nodeId].color;
+      if (allNodes[nodeId].hiddenLabel !== undefined) {
+        allNodes[nodeId].label = allNodes[nodeId].hiddenLabel;
+        allNodes[nodeId].hiddenLabel = undefined;
+      }
+    }
+    highlightActive = false;
+  }
+
+  // transform the object into an array
+  var updateArray = [];
+  if (params.nodes.length > 0) {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        // console.log(allNodes[nodeId]);
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  } else {
+    // console.log("Nothing was selected");
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        // console.log(allNodes[nodeId]);
+        // allNodes[nodeId].color = {};
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  }
+}
+
+function filterHighlight(params) {
+  allNodes = nodes.get({ returnType: "Object" });
+  // if something is selected:
+  if (params.nodes.length > 0) {
+    filterActive = true;
+    let selectedNodes = params.nodes;
+
+    // hiding all nodes and saving the label
+    for (let nodeId in allNodes) {
+      allNodes[nodeId].hidden = true;
+      if (allNodes[nodeId].savedLabel === undefined) {
+        allNodes[nodeId].savedLabel = allNodes[nodeId].label;
+        allNodes[nodeId].label = undefined;
+      }
+    }
+
+    for (let i=0; i < selectedNodes.length; i++) {
+      allNodes[selectedNodes[i]].hidden = false;
+      if (allNodes[selectedNodes[i]].savedLabel !== undefined) {
+        allNodes[selectedNodes[i]].label = allNodes[selectedNodes[i]].savedLabel;
+        allNodes[selectedNodes[i]].savedLabel = undefined;
+      }
+    }
+
+  } else if (filterActive === true) {
+    // reset all nodes
+    for (let nodeId in allNodes) {
+      allNodes[nodeId].hidden = false;
+      if (allNodes[nodeId].savedLabel !== undefined) {
+        allNodes[nodeId].label = allNodes[nodeId].savedLabel;
+        allNodes[nodeId].savedLabel = undefined;
+      }
+    }
+    filterActive = false;
+  }
+
+  // transform the object into an array
+  var updateArray = [];
+  if (params.nodes.length > 0) {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  } else {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  }
+}
+
+function selectNode(nodes) {
+  network.selectNodes(nodes);
+  neighbourhoodHighlight({ nodes: nodes });
+  return nodes;
+}
+
+function selectNodes(nodes) {
+  network.selectNodes(nodes);
+  filterHighlight({nodes: nodes});
+  return nodes;
+}
+
+function highlightFilter(filter) {
+  let selectedNodes = []
+  let selectedProp = filter['property']
+  if (filter['item'] === 'node') {
+    let allNodes = nodes.get({ returnType: "Object" });
+    for (let nodeId in allNodes) {
+      if (allNodes[nodeId][selectedProp] && filter['value'].includes((allNodes[nodeId][selectedProp]).toString())) {
+        selectedNodes.push(nodeId)
+      }
+    }
+  }
+  else if (filter['item'] === 'edge'){
+    let allEdges = edges.get({returnType: 'object'});
+    // check if the selected property exists for selected edge and select the nodes connected to the edge
+    for (let edge in allEdges) {
+      if (allEdges[edge][selectedProp] && filter['value'].includes((allEdges[edge][selectedProp]).toString())) {
+        selectedNodes.push(allEdges[edge]['from'])
+        selectedNodes.push(allEdges[edge]['to'])
+      }
+    }
+  }
+  selectNodes(selectedNodes)
+}</script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+            
+            
+            
+            
+            
+
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 750px;
+                 background-color: #222222;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#97c2fc", "font": {"color": "white"}, "id": "Sorin61", "label": "Sorin61", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "captnmr", "label": "captnmr", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "powercow", "label": "powercow", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Mccobsta", "label": "Mccobsta", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "RudegarWithFunnyHat", "label": "RudegarWithFunnyHat", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "McFeely_Smackup", "label": "McFeely_Smackup", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "set-271", "label": "set-271", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "PatSaidJack", "label": "PatSaidJack", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "BloodyIron", "label": "BloodyIron", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "socokid", "label": "socokid", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Circlemadeeverything", "label": "Circlemadeeverything", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "RedditMayne", "label": "RedditMayne", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "monchota", "label": "monchota", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "idowhatiwant8675309", "label": "idowhatiwant8675309", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "MisanthropicAtheist", "label": "MisanthropicAtheist", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "zorbathegrate", "label": "zorbathegrate", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "skyfishgoo", "label": "skyfishgoo", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "ProBluntRoller", "label": "ProBluntRoller", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Destinlegends", "label": "Destinlegends", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "bewarethetreebadger", "label": "bewarethetreebadger", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "DENelson83", "label": "DENelson83", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "FL_Sportsman", "label": "FL_Sportsman", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "farleftkeepgoing", "label": "farleftkeepgoing", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "blake-lividly", "label": "blake-lividly", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "tommygunz007", "label": "tommygunz007", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "sunplaysbass", "label": "sunplaysbass", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "liegesmash", "label": "liegesmash", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "1leggeddog", "label": "1leggeddog", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Bearet", "label": "Bearet", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "dethb0y", "label": "dethb0y", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "TheMazzMan", "label": "TheMazzMan", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "HeebieMcJeeberson", "label": "HeebieMcJeeberson", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "trent58", "label": "trent58", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Schiffy94", "label": "Schiffy94", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Geminii27", "label": "Geminii27", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "downonthesecond", "label": "downonthesecond", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "InGordWeTrust", "label": "InGordWeTrust", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "BuckyDuster", "label": "BuckyDuster", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "GeekFurious", "label": "GeekFurious", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "SurealGod", "label": "SurealGod", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Mr_Shad0w", "label": "Mr_Shad0w", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "littleMAS", "label": "littleMAS", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "largepig20", "label": "largepig20", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "surfzz318", "label": "surfzz318", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "mymar101", "label": "mymar101", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "lightknight7777", "label": "lightknight7777", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "kenix7", "label": "kenix7", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "hawksdiesel", "label": "hawksdiesel", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Toad32", "label": "Toad32", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "BrownEggs93", "label": "BrownEggs93", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Ok_Marionberry_9932", "label": "Ok_Marionberry_9932", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "1_p_freely", "label": "1_p_freely", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "GongTzu", "label": "GongTzu", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "spaceocean99", "label": "spaceocean99", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "ComputerSong", "label": "ComputerSong", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "DeanCorso11", "label": "DeanCorso11", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "squidking78", "label": "squidking78", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Shadez_Actual", "label": "Shadez_Actual", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "pierfishmarket", "label": "pierfishmarket", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "WhatTheZuck420", "label": "WhatTheZuck420", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "QueenOfQuok", "label": "QueenOfQuok", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "speckz", "label": "speckz", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "chrisdh79", "label": "chrisdh79", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "penguished", "label": "penguished", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Scarlet109", "label": "Scarlet109", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "lostpawn13", "label": "lostpawn13", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "ThinkIveHadEnough", "label": "ThinkIveHadEnough", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "sturmblast", "label": "sturmblast", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Trouble_Grand", "label": "Trouble_Grand", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "RedSquirrelFtw", "label": "RedSquirrelFtw", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Daedelous2k", "label": "Daedelous2k", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "samplestiltskin_", "label": "samplestiltskin_", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "mepper", "label": "mepper", "shape": "dot", "size": 10}]);
+                  edges = new vis.DataSet([{"from": "Sorin61", "to": "captnmr", "width": 7}, {"from": "Sorin61", "to": "powercow", "width": 12}, {"from": "Sorin61", "to": "Mccobsta", "width": 6}, {"from": "Sorin61", "to": "RudegarWithFunnyHat", "width": 8}, {"from": "Sorin61", "to": "McFeely_Smackup", "width": 12}, {"from": "Sorin61", "to": "set-271", "width": 6}, {"from": "Sorin61", "to": "PatSaidJack", "width": 13}, {"from": "Sorin61", "to": "BloodyIron", "width": 8}, {"from": "Sorin61", "to": "socokid", "width": 6}, {"from": "Sorin61", "to": "Circlemadeeverything", "width": 6}, {"from": "Sorin61", "to": "RedditMayne", "width": 7}, {"from": "Sorin61", "to": "monchota", "width": 16}, {"from": "Sorin61", "to": "idowhatiwant8675309", "width": 7}, {"from": "Sorin61", "to": "MisanthropicAtheist", "width": 6}, {"from": "Sorin61", "to": "zorbathegrate", "width": 6}, {"from": "Sorin61", "to": "skyfishgoo", "width": 6}, {"from": "Sorin61", "to": "ProBluntRoller", "width": 11}, {"from": "Sorin61", "to": "Destinlegends", "width": 6}, {"from": "Sorin61", "to": "bewarethetreebadger", "width": 11}, {"from": "Sorin61", "to": "DENelson83", "width": 10}, {"from": "Sorin61", "to": "FL_Sportsman", "width": 6}, {"from": "Sorin61", "to": "farleftkeepgoing", "width": 11}, {"from": "Sorin61", "to": "blake-lividly", "width": 6}, {"from": "Sorin61", "to": "tommygunz007", "width": 8}, {"from": "Sorin61", "to": "sunplaysbass", "width": 7}, {"from": "Sorin61", "to": "liegesmash", "width": 22}, {"from": "Sorin61", "to": "1leggeddog", "width": 10}, {"from": "Sorin61", "to": "Bearet", "width": 8}, {"from": "Sorin61", "to": "dethb0y", "width": 18}, {"from": "Sorin61", "to": "TheMazzMan", "width": 6}, {"from": "Sorin61", "to": "HeebieMcJeeberson", "width": 6}, {"from": "Sorin61", "to": "trent58", "width": 6}, {"from": "Sorin61", "to": "Schiffy94", "width": 11}, {"from": "Sorin61", "to": "Geminii27", "width": 10}, {"from": "Sorin61", "to": "downonthesecond", "width": 16}, {"from": "Sorin61", "to": "InGordWeTrust", "width": 13}, {"from": "Sorin61", "to": "BuckyDuster", "width": 6}, {"from": "Sorin61", "to": "GeekFurious", "width": 8}, {"from": "Sorin61", "to": "SurealGod", "width": 8}, {"from": "Sorin61", "to": "Mr_Shad0w", "width": 6}, {"from": "Sorin61", "to": "littleMAS", "width": 16}, {"from": "Sorin61", "to": "largepig20", "width": 6}, {"from": "Sorin61", "to": "surfzz318", "width": 6}, {"from": "Sorin61", "to": "mymar101", "width": 9}, {"from": "Sorin61", "to": "lightknight7777", "width": 8}, {"from": "Sorin61", "to": "kenix7", "width": 6}, {"from": "Sorin61", "to": "hawksdiesel", "width": 6}, {"from": "Sorin61", "to": "Toad32", "width": 7}, {"from": "Sorin61", "to": "BrownEggs93", "width": 6}, {"from": "Sorin61", "to": "Ok_Marionberry_9932", "width": 7}, {"from": "Sorin61", "to": "1_p_freely", "width": 7}, {"from": "Sorin61", "to": "GongTzu", "width": 6}, {"from": "Sorin61", "to": "spaceocean99", "width": 10}, {"from": "Sorin61", "to": "ComputerSong", "width": 7}, {"from": "Sorin61", "to": "DeanCorso11", "width": 9}, {"from": "Sorin61", "to": "squidking78", "width": 7}, {"from": "Sorin61", "to": "Shadez_Actual", "width": 6}, {"from": "Sorin61", "to": "pierfishmarket", "width": 6}, {"from": "Sorin61", "to": "WhatTheZuck420", "width": 7}, {"from": "Sorin61", "to": "QueenOfQuok", "width": 6}, {"from": "speckz", "to": "Schiffy94", "width": 6}, {"from": "chrisdh79", "to": "powercow", "width": 6}, {"from": "chrisdh79", "to": "dethb0y", "width": 14}, {"from": "chrisdh79", "to": "penguished", "width": 6}, {"from": "chrisdh79", "to": "McFeely_Smackup", "width": 7}, {"from": "chrisdh79", "to": "littleMAS", "width": 10}, {"from": "chrisdh79", "to": "Scarlet109", "width": 9}, {"from": "chrisdh79", "to": "lostpawn13", "width": 7}, {"from": "chrisdh79", "to": "ThinkIveHadEnough", "width": 7}, {"from": "chrisdh79", "to": "sturmblast", "width": 6}, {"from": "chrisdh79", "to": "tommygunz007", "width": 9}, {"from": "chrisdh79", "to": "Trouble_Grand", "width": 12}, {"from": "chrisdh79", "to": "RedSquirrelFtw", "width": 7}, {"from": "chrisdh79", "to": "downonthesecond", "width": 10}, {"from": "chrisdh79", "to": "Mccobsta", "width": 6}, {"from": "chrisdh79", "to": "liegesmash", "width": 9}, {"from": "chrisdh79", "to": "monchota", "width": 12}, {"from": "chrisdh79", "to": "Daedelous2k", "width": 6}, {"from": "samplestiltskin_", "to": "downonthesecond", "width": 6}, {"from": "downonthesecond", "to": "mepper", "width": 6}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "barnesHut": {
+            "avoidOverlap": 0,
+            "centralGravity": 0.3,
+            "damping": 0.09,
+            "gravitationalConstant": -80000,
+            "springConstant": 0.001,
+            "springLength": 250
+        },
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>
